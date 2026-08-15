@@ -52,7 +52,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item clickable to="/termini"> <!--vodi na TerminiPage sa uslugaID = 1 -->
+        <q-item clickable to="/termini"> 
       <q-item-section avatar>
         <q-icon name="event" />
       </q-item-section>
@@ -61,7 +61,7 @@
       </q-item-section>
     </q-item>
 
-    <q-item clickabke to="/moje_rezervacije">
+    <q-item clickable to="/moje_rezervacije">
       <q-item-section avatar>
         <q-icon name="book_online" />
       </q-item-section>

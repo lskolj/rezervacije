@@ -3,6 +3,9 @@
     <h1>Dostupne usluge</h1>
     <p>Odaberite uslugu kako biste vidjeli dostupne termine:</p>
 
+    <q-spinner v-if="ucitavanje" color="primary" size="3em" />
+    <q-banner v-if="error" type="negative">{{ error }}</q-banner>
+
     <div class="row q-gutter-md">
       <q-card
         v-for="usluga in usluge"
@@ -42,28 +45,41 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from 'boot/axios'
 
 export default {
   setup() {
     const router = useRouter()
-    const usluge = ref([
-      { usluga_id: 1, naziv: 'Frizerski salon', opis: 'Šišanje i oblikovanje kose', trajanje: 90, cijena: 45, dostupnost: true },
-      { usluga_id: 2, naziv: 'Automehaničar', opis: 'Servis i dijagnostika vozila', trajanje: 60, cijena: 100, dostupnost: true },
-      { usluga_id: 3, naziv: 'Popravak računala', opis: 'Dijagnostika i popravak hardvera i softvera', trajanje: 120, cijena: 80, dostupnost: false },
-      { usluga_id: 4, naziv: 'Stomatolog', opis: 'Osnovni stomatološki pregled', trajanje: 30, cijena: 50, dostupnost: true },
-      { usluga_id: 5, naziv: 'Manikura', opis: 'Uređivanje i lakiranje noktiju', trajanje: 45, cijena: 30, dostupnost: false }
-    ])
+    const usluge = ref([])
+    const ucitavanje = ref(false)
+    const error = ref('')
+
+    const dohvatiUsluge = async () => {
+      ucitavanje.value = true
+      error.value = ''
+      try {
+        const odgovor = await api.get('/usluge')
+        usluge.value = odgovor.data
+      } catch {
+        error.value = 'Greška prilikom dohvaćanja usluga.'
+      } finally {
+        ucitavanje.value = false
+      }
+    }
 
     const odaberiUslugu = (uslugaId) => {
-      console.log('Odabrana usluga ID:', uslugaId)
-      router.push('/termini/' + uslugaId) // vodi na TerminiPage filtrirano po usluzi
+      router.push('/termini/' + uslugaId)
     }
+
+    onMounted(dohvatiUsluge)
 
     return {
       usluge,
-      odaberiUslugu
+      ucitavanje,
+      error,
+      odaberiUslugu,
     }
   }
 }
