@@ -31,7 +31,7 @@ CREATE TABLE termini (
 ALTER TABLE termini
 ADD PRIMARY KEY (termin_id);
 
-ALTER TABLE termini --dodavanje stranog kljuca
+ALTER TABLE termini 
 ADD CONSTRAINT fk_termin_usluga
 FOREIGN KEY (usluga_id) REFERENCES usluge(usluga_id);
 
