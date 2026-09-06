@@ -10,7 +10,8 @@ const routes = [
       { path: '/termini', component: () => import('pages/TerminiPage.vue') },
       { path: '/termini/:uslugaId', component: () => import('pages/TerminiPage.vue') },
       { path: '/moje_rezervacije', component: () => import('pages/RezervacijePage.vue') },
-      { path: '/admin', component: () => import('pages/AdminPage.vue') }
+      { path: '/admin', component: () => import('pages/AdminPage.vue') },
+      { path: '/admin/slozeni-upiti', component: () => import('pages/SlozeniUpiti.vue') }
     ]
   },
 

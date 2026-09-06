@@ -17,6 +17,69 @@
           </q-card-section>
         </q-card>
       </div>
+      
+      <div class="q-pa-md">
+        <q-card class="my-card">
+          <q-table
+            title="Termini"
+            :rows="termini"
+            :columns="terminColumns"
+            row-key="termin_id"
+            selection="single"
+            v-model:selected="selectedTermin"
+          />
+          <q-card-section>
+            <q-btn color="negative" @click="obrisiTermin" label="Obriši odabrano" />
+            <q-btn color="primary" @click="ucitajTerminZaIzmjenu" label="Uredi odabrano" class="q-ml-sm" />
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <div class="q-pa-md">
+        <q-card class="my-card">
+          <q-card-section class="bg-primary text-white">
+            <div class="text-h6">{{ naslovTerminForme }}</div>
+          </q-card-section>
+          <q-list>
+            <q-item>
+              <q-item-section>
+                <q-item-label caption>Usluga</q-item-label>
+                <q-select
+                  square outlined
+                  v-model="terminUslugaId"
+                  :options="usluge"
+                  option-value="usluga_id"
+                  option-label="naziv"
+                  emit-value
+                  map-options
+                />
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section>
+                <q-item-label caption>Datum</q-item-label>
+                <q-input square outlined type="date" v-model="terminDatum" />
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section>
+                <q-item-label caption>Vrijeme</q-item-label>
+                <q-input square outlined type="time" v-model="terminVrijeme" />
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section>
+                <q-checkbox v-model="terminDostupan" label="Slobodan" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <q-item>
+            <q-btn color="primary" @click="isNoviTermin ? kreirajTermin() : azurirajTermin()">
+              {{ naslovTerminForme }}
+            </q-btn>
+          </q-item>
+        </q-card>
+      </div>
 
       <div class="q-pa-md">
         <q-card class="my-card">
@@ -62,6 +125,7 @@
         </q-card>
       </div>
     </div>
+      <q-btn to="/admin/slozeni-upiti" label="Složeni upiti" color="secondary" class="q-mb-md" />
   </q-page>
 </template>
 
@@ -155,13 +219,109 @@ export default {
       isNova.value = false
     }
 
+    // ---- Termini ----
+    const termini = ref([])
+    const selectedTermin = ref([])
+    const terminUslugaId = ref(null)
+    const terminDatum = ref('')
+    const terminVrijeme = ref('')
+    const terminDostupan = ref(true)
+    const terminId = ref(0)
+    const naslovTerminForme = ref('Novi termin')
+    const isNoviTermin = ref(true)
+
+    const terminColumns = [
+      { name: 'usluga', align: 'left', label: 'Usluga', field: 'usluga', sortable: true },
+      { name: 'datum', align: 'center', label: 'Datum', field: 'datum' },
+      { name: 'vrijeme', align: 'center', label: 'Vrijeme', field: 'vrijeme' },
+      { name: 'dostupan', align: 'center', label: 'Slobodan', field: row => row.dostupan ? 'Da' : 'Ne' }
+    ]
+
+    const ucitajTermine = async () => {
+      try {
+        const odgovor = await api.get('/termini')
+        termini.value = odgovor.data
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    const resetTerminForme = () => {
+      terminUslugaId.value = null
+      terminDatum.value = ''
+      terminVrijeme.value = ''
+      terminDostupan.value = true
+      terminId.value = 0
+      naslovTerminForme.value = 'Novi termin'
+      isNoviTermin.value = true
+    }
+
+    const kreirajTermin = async () => {
+      const formData = {
+        usluga_id: terminUslugaId.value,
+        datum: terminDatum.value,
+        vrijeme: terminVrijeme.value,
+        dostupan: terminDostupan.value
+      }
+      try {
+        await api.post('/termini', formData)
+        await ucitajTermine()
+        resetTerminForme()
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    const azurirajTermin = async () => {
+      const formData = {
+        usluga_id: terminUslugaId.value,
+        datum: terminDatum.value,
+        vrijeme: terminVrijeme.value,
+        dostupan: terminDostupan.value
+      }
+      try {
+        await api.put('/termini/' + terminId.value, formData)
+        await ucitajTermine()
+        resetTerminForme()
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    const obrisiTermin = async () => {
+      if (selectedTermin.value.length === 0) return
+      try {
+        await api.delete('/termini/' + selectedTermin.value[0].termin_id)
+        await ucitajTermine()
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    const ucitajTerminZaIzmjenu = () => {
+      if (selectedTermin.value.length === 0) return
+      const t = selectedTermin.value[0]
+      terminId.value = t.termin_id
+      terminUslugaId.value = t.usluga_id
+      terminDatum.value = typeof t.datum === 'string' ? t.datum.split('T')[0] : t.datum
+      terminVrijeme.value = t.vrijeme
+      terminDostupan.value = !!t.dostupan
+      naslovTerminForme.value = 'Uredi termin'
+      isNoviTermin.value = false
+    }
+
     ucitajUsluge()
+    ucitajTermine()
 
     return {
       usluge, selected, columns,
       naziv, opis, trajanje, cijena, dostupnost,
       naslovForme, isNova,
-      kreirajUslugu, azurirajUslugu, obrisiUslugu, ucitajZaIzmjenu
+      kreirajUslugu, azurirajUslugu, obrisiUslugu, ucitajZaIzmjenu,
+      termini, selectedTermin, terminColumns,
+      terminUslugaId, terminDatum, terminVrijeme, terminDostupan,
+      naslovTerminForme, isNoviTermin,
+      kreirajTermin, azurirajTermin, obrisiTermin, ucitajTerminZaIzmjenu
     }
   }
 }
