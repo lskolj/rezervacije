@@ -5,9 +5,12 @@ node_modules/
 dist/
 .quasar/
 
-# Log files
-*.log
-
 # Sistemske datoteke
 .DS_Store
 Thumbs.db
+
+# Log files
+*.log
+
+# Environment / tajne
+.env
